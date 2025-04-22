@@ -54,7 +54,7 @@ def main():
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
                 
-                if response.status_code == 200:
+                if response.status_code == 201:
                     data = response.json()
                     if data.get("cwc"):
                         enviar_si_corresponde(data)
