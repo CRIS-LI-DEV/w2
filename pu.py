@@ -1,4 +1,5 @@
 import json
+import time
 import requests
 import paho.mqtt.client as mqtt
 
@@ -8,6 +9,7 @@ BROKER_PORT = 57689
 DATA_URL = "https://viz1-production.up.railway.app/br-out/"
 TOPIC = "ard/12"
 ID_SOLICITADO = 12
+INTERVALO_SEGUNDOS = 10
 
 # Crear cliente MQTT
 client = mqtt.Client()
@@ -27,21 +29,28 @@ def main():
         client.connect(BROKER_URL, BROKER_PORT, 60)
         client.loop_start()
 
-        # Hacer la solicitud POST con {"id": 12}
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("cwc"):
-                enviar_si_corresponde(data)
-            else:
-                print("No se debe enviar nada. 'cwc' es False.")
-        else:
-            print(f"Error al obtener datos (status {response.status_code}): {response.text}")
+        while True:
+            try:
+                # Hacer la solicitud POST con {"id": 12}
+                headers = {'Content-Type': 'application/json'}
+                response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("cwc"):
+                        enviar_si_corresponde(data)
+                    else:
+                        print("No se debe enviar nada. 'cwc' es False.")
+                else:
+                    print(f"Error al obtener datos (status {response.status_code}): {response.text}")
+            
+            except Exception as e:
+                print(f"Error durante la solicitud/post: {e}")
+            
+            time.sleep(INTERVALO_SEGUNDOS)
     
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error de conexión MQTT: {e}")
     
     finally:
         client.loop_stop()
