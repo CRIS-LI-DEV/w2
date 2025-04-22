@@ -14,17 +14,36 @@ INTERVALO_SEGUNDOS = 10
 # Crear cliente MQTT
 client = mqtt.Client()
 
+# Función callback para cuando el cliente se conecta
+def on_connect(client, userdata, flags, rc):
+    print(f"Conectado al broker con código de resultado: {rc}")
+    if rc == 0:
+        client.subscribe(TOPIC)  # Si es necesario, subscribirse a un topic.
+
+# Función callback para cuando el cliente publica un mensaje
+def on_publish(client, userdata, mid):
+    print(f"Mensaje publicado con ID: {mid}")
+
+# Función para enviar el mensaje si corresponde
 def enviar_si_corresponde(data):
     for item in data.get("cwas", []):
         if item.get("id") == ID_SOLICITADO and item.get("cwa") is True:
             payload = json.dumps(item)
             print(f"Enviando a tópico {TOPIC}: {payload}")
-            client.publish(TOPIC, payload)
+            result = client.publish(TOPIC, payload)
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                print("Mensaje publicado con éxito.")
+            else:
+                print(f"Error al publicar el mensaje: {result.rc}")
             return
     print("No se encontró ningún item con id=12 y cwa=true.")
 
 def main():
     try:
+        # Establecer callbacks
+        client.on_connect = on_connect
+        client.on_publish = on_publish
+        
         # Conectar al broker MQTT
         client.connect(BROKER_URL, BROKER_PORT, 60)
         client.loop_start()
