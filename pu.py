@@ -9,7 +9,7 @@ BROKER_PORT = 57689
 DATA_URL = "https://viz1-production.up.railway.app/br-out/"
 TOPIC = "ard/12"
 ID_SOLICITADO = 12
-INTERVALO_SEGUNDOS = 3
+INTERVALO_SEGUNDOS = 10
 
 # Crear cliente MQTT
 client = mqtt.Client()
@@ -24,19 +24,16 @@ def on_connect(client, userdata, flags, rc):
 def on_publish(client, userdata, mid):
     print(f"Mensaje publicado con ID: {mid}")
 
-# Función para enviar el mensaje si corresponde
-def enviar_si_corresponde(data):
-    for item in data.get("cwas", []):
-        if item.get("id") == ID_SOLICITADO and item.get("cwa") is True:
-            payload = json.dumps(item)
-            print(f"Enviando a tópico {TOPIC}: {payload}")
-            result = client.publish(TOPIC, payload)
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                print("Mensaje publicado con éxito.")
-            else:
-                print(f"Error al publicar el mensaje: {result.rc}")
-            return
-    print("No se encontró ningún item con id=12 y cwa=true.")
+# Función para enviar el mensaje completo
+def enviar_completo(data):
+    # Aquí simplemente enviamos todo el JSON recibido
+    payload = json.dumps(data)
+    print(f"Enviando a tópico {TOPIC}: {payload}")
+    result = client.publish(TOPIC, payload)
+    if result.rc == mqtt.MQTT_ERR_SUCCESS:
+        print("Mensaje publicado con éxito.")
+    else:
+        print(f"Error al publicar el mensaje: {result.rc}")
 
 def main():
     try:
@@ -54,10 +51,12 @@ def main():
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
                 
-                if response.status_code == 201:
+                if response.status_code == 200:
                     data = response.json()
-                    if data.get("cwc"):
-                        enviar_si_corresponde(data)
+                    print("Respuesta de la API completa:", json.dumps(data, indent=2))  # Ver los datos completos
+                    
+                    if data.get("cwc"):  # Verificar si "cwc" es verdadero
+                        enviar_completo(data)  # Enviar todo el JSON
                     else:
                         print("No se debe enviar nada. 'cwc' es False.")
                 else:
