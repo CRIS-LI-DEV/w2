@@ -18,7 +18,7 @@ client = mqtt.Client()
 def on_connect(client, userdata, flags, rc):
     print(f"Conectado al broker con código de resultado: {rc}")
     if rc == 0:
-        client.subscribe(TOPIC)  # Si es necesario, subscribirse a un topic.
+        client.subscribe(TOPIC)  # Subscribirse si se necesita
 
 # Función callback para cuando el cliente publica un mensaje
 def on_publish(client, userdata, mid):
@@ -26,7 +26,6 @@ def on_publish(client, userdata, mid):
 
 # Función para enviar el mensaje completo
 def enviar_completo(data):
-    # Aquí simplemente enviamos todo el JSON recibido
     payload = json.dumps(data)
     print(f"Enviando a tópico {TOPIC}: {payload}")
     result = client.publish(TOPIC, payload)
@@ -37,28 +36,22 @@ def enviar_completo(data):
 
 def main():
     try:
-        # Establecer callbacks
         client.on_connect = on_connect
         client.on_publish = on_publish
         
-        # Conectar al broker MQTT
         client.connect(BROKER_URL, BROKER_PORT, 60)
         client.loop_start()
 
         while True:
             try:
-                # Hacer la solicitud POST con {"id": 12}
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
                 
                 if response.status_code == 201:
                     data = response.json()
-                    print("Respuesta de la API completa:", json.dumps(data, indent=2))  # Ver los datos completos
+                    print("Respuesta de la API completa:", json.dumps(data, indent=2))
                     
-                    if data.get("cwc"):  # Verificar si "cwc" es verdadero
-                        enviar_completo(data)  # Enviar todo el JSON
-                    else:
-                        print("No se debe enviar nada. 'cwc' es False.")
+                    enviar_completo(data)  # Enviar SIEMPRE el JSON completo
                 else:
                     print(f"Error al obtener datos (status {response.status_code}): {response.text}")
             
