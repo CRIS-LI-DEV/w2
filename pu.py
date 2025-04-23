@@ -9,7 +9,7 @@ BROKER_PORT = 57689
 DATA_URL = "https://viz1-production.up.railway.app/br-out/"
 TOPIC = "ard/12"
 ID_SOLICITADO = 12
-INTERVALO_SEGUNDOS = 10
+INTERVALO_SEGUNDOS = 3
 
 # Crear cliente MQTT
 client = mqtt.Client()
