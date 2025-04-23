@@ -51,7 +51,7 @@ def main():
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(DATA_URL, headers=headers, json={"id": ID_SOLICITADO})
                 
-                if response.status_code == 200:
+                if response.status_code == 201:
                     data = response.json()
                     print("Respuesta de la API completa:", json.dumps(data, indent=2))  # Ver los datos completos
                     
